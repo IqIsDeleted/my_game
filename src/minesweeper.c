@@ -1,31 +1,61 @@
 #include "minesweeper.h"
 
-int main(int argc, char *argv[]) {
+int main() {
+  initscr();
   if (game_process()) {
-    printf("You win!\n");
+    printw("You win!\n");
   } else {
-    printf("You lose!\n");
+    printw("You lose!\n");
   }
+  printw("Press any key to exit");
+  refresh();
+  getch();
+  endwin();
   return 0;
 }
 
-void print_field(int8_t board[BOARD_SIZE][BOARD_SIZE]) {
-  printf("   ");
-  for (int i = 0; i < BOARD_SIZE; ++i) {
-    printf("%2c", 'a' + i);
-  }
-  printf("\n");
-  for (int i = 0; i < BOARD_SIZE; ++i) {
-    printf("%2d ", i + 1);
-    for (int j = 0; j < BOARD_SIZE; ++j) {
-      printf("%2c", board[i][j]);
+bool game_process() {
+  int8_t board[BOARD_SIZE][BOARD_SIZE];
+  short res = 2;
+  int x = 0, y = 0;
+  bool filling_flag = 1;
+  while (res == 2) {
+    clear();
+    print_field(board);
+    refresh();
+    printw("\nEnter coordinates(num letter): ");
+    scanw("%d %c", &x, (char*)&y);
+    y -= 'a';
+    filling_flag ? filling_of_board(board, x - 1, y), filling_flag = 0 : 0;
+    if (board[x - 1][y] == MINES_POINT) {
+      board[x - 1][y] = '*';
+      res = 0;
+      clear();
+      print_field(board);
+    } else if (board[x - 1][y] == EMPTY_POINT) {
+      calculate_points(board, x - 1, y);
     }
-    printf("\n");
   }
-  printf("\nEnter coordinates(x y): ");
+  return res;
 }
 
-void filling_of_board(int8_t board[BOARD_SIZE][BOARD_SIZE]) {
+void print_field(int8_t board[BOARD_SIZE][BOARD_SIZE]) {
+  printw("   ");
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    printw("%2c", 'a' + i);
+  }
+  printw("\n");
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    printw("%2d ", i + 1);
+    for (int j = 0; j < BOARD_SIZE; ++j) {
+      printw("%2c", board[i][j]);
+    }
+    printw("\n");
+  }
+}
+
+void filling_of_board(int8_t board[BOARD_SIZE][BOARD_SIZE], int start_x,
+                      int start_y) {
   for (int i = 0; i < BOARD_SIZE; ++i) {
     for (int j = 0; j < BOARD_SIZE; ++j) {
       board[i][j] = EMPTY_POINT;
@@ -34,9 +64,16 @@ void filling_of_board(int8_t board[BOARD_SIZE][BOARD_SIZE]) {
   srand(time(NULL));
   for (unsigned i = 0; i < 15; ++i) {
     int x, y;
+
     do {
-      x = rand() % BOARD_SIZE;
-      y = rand() % BOARD_SIZE;
+      int tmp = rand() % BOARD_SIZE;
+      if (tmp < start_x - 1 || tmp > start_x + 1) {
+        x = tmp;
+      }
+      tmp = rand() % BOARD_SIZE;
+      if (tmp < start_y - 1 || tmp > start_y + 1) {
+        y = tmp;
+      }
     } while (board[x][y] != EMPTY_POINT);
     board[x][y] = MINES_POINT;
   }
@@ -67,25 +104,4 @@ void calculate_points(int8_t board[BOARD_SIZE][BOARD_SIZE], int x, int y) {
       calculate_points(board, x + 1, y + 1);
     }
   }
-}
-
-bool game_process() {
-  int8_t board[BOARD_SIZE][BOARD_SIZE];
-  uint8_t mines = 0;
-  short res = 2;
-  int x = 0, y = 0;
-  filling_of_board(board);
-  while (res == 2) {
-    print_field(board);
-    scanf("%d %c", &x, &y);
-    y -= 'a';
-    if (board[x - 1][y - 1] == MINES_POINT) {
-      board[x - 1][y - 1] = '*';
-      res = 0;
-      print_field(board);
-    } else if (board[x - 1][y - 1] == EMPTY_POINT) {
-      calculate_points(board, x - 1, y - 1);
-    }
-  }
-  return res;
 }
