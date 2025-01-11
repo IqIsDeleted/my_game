@@ -25,16 +25,17 @@ bool game_process() {
     clear();
     print_field(board);
     refresh();
+    printw("\nPoints: %u\n", points);
     printw("\nEnter coordinates(num letter): ");
     scanw("%d %c", &x, (char*)&y);
     y -= 'a';
     mines_flag ? lay_mines(board, x - 1, y), mines_flag = 0 : 0;
-    if (board[x - 1][y] == MINES_POINT) {
+    if (board[x - 1][y] == EMPTY_POINT) {
+      points += calculate_points(board, x - 1, y);
+      points >= BOARD_SIZE* BOARD_SIZE - AMOUNT_OF_MINES ? res = 1 : 0;
+    } else if (board[x - 1][y] == MINES_POINT) {
       board[x - 1][y] = '*';
       res = 0;
-    } else if (board[x - 1][y] == EMPTY_POINT) {
-      points += calculate_points(board, x - 1, y);
-      points > BOARD_SIZE* BOARD_SIZE - AMOUNT_OF_MINES ? res = 1 : 0;
     }
   }
   clear();
@@ -83,11 +84,13 @@ void lay_mines(int8_t board[BOARD_SIZE][BOARD_SIZE], int start_x, int start_y) {
   }
 }
 
-unsigned calculate_points(int8_t board[BOARD_SIZE][BOARD_SIZE], int x, int y) { // Я еб** рез
-  unsigned res = 1;
+unsigned calculate_points(int8_t board[BOARD_SIZE][BOARD_SIZE], int x,
+                          int y) {  // Я еб** рез
+  unsigned res = 0;
   if (!(x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE ||
         board[x][y] != EMPTY_POINT)) {
     int points = 0;
+    res = 1;
     for (int i = x - 1; i <= x + 1; ++i) {
       for (int j = y - 1; j <= y + 1; ++j) {
         if (i >= 0 && i < BOARD_SIZE && j >= 0 && j < BOARD_SIZE) {
